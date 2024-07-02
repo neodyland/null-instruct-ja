@@ -3,7 +3,6 @@ from peft import PeftModel, PeftConfig
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
     GemmaForCausalLM,
     TextStreamer,
     GenerationConfig,
@@ -20,7 +19,6 @@ PEFT_MODEL_PATH = f"./model-result/checkpoint-{args.steps}"
 config = PeftConfig.from_pretrained(PEFT_MODEL_PATH)
 model = AutoModelForCausalLM.from_pretrained(
     config.base_model_name_or_path,
-    quantization_config=BitsAndBytesConfig(load_in_8bit=True),
     device_map="auto",
 )
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
