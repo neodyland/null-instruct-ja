@@ -2,3 +2,4 @@ venv/
 *.png
 __pycache__/
 result/*.json
+model-result/

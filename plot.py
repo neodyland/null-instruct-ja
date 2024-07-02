@@ -9,7 +9,7 @@ from scipy.spatial.distance import pdist, squareform
 sentences = []
 sentences_full = []
 
-for f in glob.glob("./result/response_*.json"):
+for f in glob.glob("./result/prompt_*.json"):
     with open(f, "r") as r:
         for x in json.loads(r.read()):
             sentences.append(x["user"])

@@ -12,9 +12,8 @@ null instruct jaはある程度日本語性能が高いllmを用いて、人の�
 1. http://localhost:8080/completions にpostできる状態でgemma-2-9b-itまたはgemma-2-27b-itを起動します。
 2. このリポジトリをクローンし、`requirements.txt`から依存関係をインストールします。
 3. `API_HOST=http://localhost:8080 python gen_prompt.py --max_count_for_evol 3 --max_count_for_null 300 --evol_steps 1` を実行します。
-4. 終わったら`python gen_response.py` を実行します。
-5. 終わったら`python plot.py` を実行します。
-6. `result/filtered.json` に結果が出力されます。
+4. 終わったら`python plot.py` を実行します。
+5. `result/filtered.json` に結果が出力されます。
 
 # オプションについて
 ## max_count_for_null
@@ -34,9 +33,13 @@ ds.push_to_hub("<hf repo id>")
 で素早くpushするためのファイルです。
 ## gen_prompt.py
 無からプロンプトを生成するところまでをやってくれます。
-## gen_response.py
-プロンプトからいい感じの回答を生成します。
-## gen.py
-サーバーへのリクエストの共通事項をまとめてあります。
 ## plot.py
 `plot_after.png`, `plot_before.png` (doc2vecによる文章分布の確認) および`result/filtered.json`(類似した質問の排除)を生成します。
+## lora_infer.py
+`lora.py`で作成されたモデルを
+```py
+from lora_infer import infer
+```
+で読み込むためのファイルでs。
+## lora.py
+[`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`microsoft/Phi-3-mini-4k-instruct`](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct)をファインチューニングします。
