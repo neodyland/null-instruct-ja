@@ -11,3 +11,4 @@ peft
 bitsandbytes
 flash_attn
 sentence_transformers
+trl

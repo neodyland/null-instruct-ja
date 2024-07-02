@@ -51,7 +51,6 @@ def infer(inst: str):
                 top_k=40,
                 repetition_penalty=5.0,
                 max_new_tokens=args.max,
-                eos_token_id=tokenizer.eos_token_id,
             ),
         )
 
