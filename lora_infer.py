@@ -6,6 +6,7 @@ from transformers import (
     BitsAndBytesConfig,
     GemmaForCausalLM,
     TextStreamer,
+    GenerationConfig,
 )
 from argparse import ArgumentParser
 
@@ -42,13 +43,16 @@ def infer(inst: str):
         model.generate(
             **inputs,
             streamer=streamer,
-            max_new_tokens=args.max,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.75,
-            top_k=40,
-            repetition_penalty=5.0,
             pad_token_id=tokenizer.pad_token_id,
+            generation_config=GenerationConfig(
+                do_sample=True,
+                temperature=0.7,
+                top_p=0.75,
+                top_k=40,
+                repetition_penalty=5.0,
+                max_new_tokens=args.max,
+                eos_token_id=tokenizer.eos_token_id,
+            ),
         )
 
 
