@@ -1,13 +1,9 @@
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
-from peft import LoraConfig, TaskType
+from argparse import ArgumentParser
 from datasets import load_dataset
 import torch
-from argparse import ArgumentParser
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, SFTConfig
+from unsloth import FastLanguageModel, is_bfloat16_supported
+
 
 parser = ArgumentParser()
 parser.add_argument("--resume", type=bool, default=False)
@@ -17,27 +13,34 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 
-model = AutoModelForCausalLM.from_pretrained(
-    "google/gemma-1.1-2b-it",
-    quantization_config=BitsAndBytesConfig(load_in_8bit=True),
-    device_map="auto",
+max_seq_length = 8192
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="unsloth/gemma-1.1-2b-it",
+    max_seq_length=max_seq_length,
+    dtype=None,
+    load_in_4bit=True,
 )
-tokenizer = AutoTokenizer.from_pretrained("google/gemma-1.1-2b-it")
-lora_config = LoraConfig(
-    r=8,
-    lora_alpha=16,
+model = FastLanguageModel.get_peft_model(
+    model,
+    r=16,
     target_modules=[
-        "gate_proj",
-        "k_proj",
         "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
         "up_proj",
         "down_proj",
-        "o_proj",
-        "v_proj",
     ],
-    lora_dropout=0.05,
+    lora_alpha=16,
+    lora_dropout=0,
     bias="none",
-    task_type=TaskType.CAUSAL_LM,
+    use_gradient_checkpointing="unsloth",
+    random_state=42,
+    max_seq_length=max_seq_length,
+    use_rslora=False,
+    loftq_config=None,
 )
 
 cfg = SFTConfig(
@@ -51,7 +54,10 @@ cfg = SFTConfig(
     save_total_limit=2,
     push_to_hub=False,
     auto_find_batch_size=True,
-    max_seq_length=8192,
+    max_seq_length=max_seq_length,
+    optim="adamw_8bit",
+    fp16=not is_bfloat16_supported(),
+    bf16=is_bfloat16_supported(),
 )
 
 dataset = load_dataset("neody/null-instruct-ja", split="train")
@@ -81,7 +87,6 @@ trainer = SFTTrainer(
         "<start_of_turn>model\n", tokenizer=tokenizer
     ),
     formatting_func=formatting_prompts_func,
-    peft_config=lora_config,
 )
 
 trainer.train(args.resume)

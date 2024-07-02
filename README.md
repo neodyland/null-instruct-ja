@@ -10,7 +10,7 @@ null instruct jaはある程度日本語性能が高いllmを用いて、人の�
 
 # 実行
 1. http://localhost:8080/completions にpostできる状態でgemma-2-9b-itまたはgemma-2-27b-itを起動します。
-2. このリポジトリをクローンし、`requirements.txt`から依存関係をインストールします。
+2. このリポジトリをクローンし、`requirements.txt`を参考に依存関係をインストールします。(RTX3000系以降のlinux意外は`pip install -r requirements.txt`ではインストールできません。適宜手動インストールしてください。)
 3. `API_HOST=http://localhost:8080 python gen_prompt.py --max_count_for_evol 3 --max_count_for_null 300 --evol_steps 1` を実行します。
 4. 終わったら`python plot.py` を実行します。
 5. `result/filtered.json` に結果が出力されます。
