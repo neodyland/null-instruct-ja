@@ -15,11 +15,11 @@ torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 
 model = AutoModelForCausalLM.from_pretrained(
-    "microsoft/Phi-3-mini-4k-instruct",
+    "google/gemma-1.1-2b-it",
     quantization_config=BitsAndBytesConfig(load_in_8bit=True),
     device_map="auto",
 )
-tokenizer = AutoTokenizer.from_pretrained("microsoft/Phi-3-mini-4k-instruct")
+tokenizer = AutoTokenizer.from_pretrained("google/gemma-1.1-2b-it")
 lora_config = LoraConfig(
     r=8,
     lora_alpha=16,

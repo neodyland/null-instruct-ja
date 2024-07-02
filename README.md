@@ -34,7 +34,7 @@ ds.push_to_hub("<hf repo id>")
 ## gen_prompt.py
 無からプロンプトを生成するところまでをやってくれます。
 ## plot.py
-`plot_after.png`, `plot_before.png` (doc2vecによる文章分布の確認) および`result/filtered.json`(類似した質問の排除)を生成します。
+`plot_after.png` (multilingual-e5-largeによる分布確認) および`result/filtered.json`(最終結果)を生成します。
 ## lora_infer.py
 `lora.py`で作成されたモデルを
 ```py
@@ -42,7 +42,7 @@ from lora_infer import infer
 ```
 で読み込むためのファイルでs。
 ## lora.py
-[`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`microsoft/Phi-3-mini-4k-instruct`](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct)をファインチューニングします。
+[`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`google/gemma-1.1-2b-it`](https://huggingface.co/google/gemma-1.1-2b-itt)をファインチューニングします。
 
 # Special Thanks
 ##  Calude 3.5 Sonnetくん
