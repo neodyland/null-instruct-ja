@@ -114,22 +114,9 @@ async def evol_flatten(prompt: str):
     )
 
 
-async def length(q: str, a: str):
-    return await gen(
-        f"""あなたはとても賢く饒舌なAIとして、以下の質問および饒舌でないAIが生成した回答を基に、より饒舌な回答を生成します。
-しかしながら、饒舌で賢いあなたは回答しているうちに、回答が不正確であることに気が付くかもしれません。その場合は\"不正確です\"と応答してください。
-それ以外の場合は饒舌な回答だけを応答してください。
-
-質問: {q}
-饒舌でないAIが生成した回答: {a}
-
-より饒舌に修正された回答または\"不正確です\": """
-    )
-
-
 async def response(prompt: str):
     return await gen(
-        f"""あなたはとても賢いAIとして、以下の質問に対して回答します。
+        f"""あなたはとても賢い饒舌なAIとして、以下の質問に対して回答します。
 しかしながら、質問の質はよいとは限らず、回答が不可能なものも含まれます。
 回答が可能である場合は質問に対して回答し、回答が不可能、または正確な回答を導き出すことが不可能である場合は、\"不可能\"とだけ回答してください。
 回答が可能である場合は回答のみを出力してください。
@@ -170,9 +157,6 @@ async def evol(prompt: str, steps: int = 3):
     r = await response(prompt)
     if "不可能" in r:
         return {"failed": "response", "reason": r}
-    r = await length(prompt, r)
-    if "不正確です" in r:
-        return {"failed": "length", "reason": r}
     c = await check(prompt, r)
     if c != "はい" and c != "はい。":
         return {"failed": "check", "reason": c}

@@ -36,7 +36,7 @@ def infer(inst: str):
         ),
         return_tensors="pt",
     ).to(model.device)
-    streamer = TextStreamer(tokenizer, skip_prompt=True)
+    streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
     with torch.no_grad():
         model.generate(
             **inputs,
