@@ -48,7 +48,7 @@ sentence_vectors = np.array(sentence_vectors)
 distances = pdist(sentence_vectors)
 distance_matrix = squareform(distances)
 
-percentile = 0.1
+percentile = 0.05
 threshold = np.percentile(distances, percentile)
 
 

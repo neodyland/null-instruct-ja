@@ -157,7 +157,7 @@ async def evol(prompt: str, steps: int = 3):
     if prompt is None:
         return {"failed": "width"}
     result = await evol_judge(prompt)
-    if result != "はい" and result != "はい。":
+    if result != "はい" and result != "はい。" and "質が高いと言えます" not in result:
         return {"failed": "judge", "reason": result}
     for _ in range(steps):
         prompt = await evol_depth(prompt)
@@ -165,7 +165,7 @@ async def evol(prompt: str, steps: int = 3):
             return None
     prompt = await evol_flatten(prompt)
     result = await evol_judge(prompt)
-    if result != "はい" and result != "はい。":
+    if result != "はい" and result != "はい。" and "質が高いと言えます" not in result:
         return {"failed": "judge2", "reason": result}
     r = await response(prompt)
     if "不可能" in r:
