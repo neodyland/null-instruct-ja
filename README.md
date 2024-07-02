@@ -36,13 +36,11 @@ ds.push_to_hub("<hf repo id>")
 ## plot.py
 `plot_after.png` (multilingual-e5-largeによる分布確認) および`result/filtered.json`(最終結果)を生成します。
 ## lora_infer.py
-`lora.py`で作成されたモデルを
-```py
-from lora_infer import infer
-```
+`python lora_infer.py --steps {int} --max 128` でloraモデルの検証ができます。
 で読み込むためのファイルでs。
 ## lora.py
 [`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`google/gemma-1.1-2b-it`](https://huggingface.co/google/gemma-1.1-2b-itt)をファインチューニングします。
+`python lora.py --resume False|True`で学習を起動します。
 
 # Special Thanks
 ##  Calude 3.5 Sonnetくん

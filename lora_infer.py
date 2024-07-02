@@ -10,7 +10,8 @@ from transformers import (
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("--steps", type=str, required=True)
+parser.add_argument("--steps", type=int, required=True)
+parser.add_argument("--max", type=int, default=128)
 args = parser.parse_args()
 
 PEFT_MODEL_PATH = f"./model-result/checkpoint-{args.steps}"
@@ -41,7 +42,7 @@ def infer(inst: str):
         model.generate(
             **inputs,
             streamer=streamer,
-            max_new_tokens=128,
+            max_new_tokens=args.max,
             do_sample=True,
             temperature=0.7,
             top_p=0.75,
@@ -49,3 +50,11 @@ def infer(inst: str):
             repetition_penalty=5.0,
             pad_token_id=tokenizer.pad_token_id,
         )
+
+
+while True:
+    inp = input("User: ")
+    if inp == "exit":
+        break
+    print("Model: ", end="")
+    infer(inp)
