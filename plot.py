@@ -3,8 +3,6 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.decomposition import PCA
 import json
 import glob
-import numpy as np
-from scipy.spatial.distance import pdist, squareform
 
 sentences = []
 sentences_full = []
@@ -43,39 +41,7 @@ def plot(sentences: list[str], save: str):
     plt.savefig(save)
 
 
-sentence_vectors = [model.dv[str(i)] for i in range(len(sentences))]
-sentence_vectors = np.array(sentence_vectors)
-distances = pdist(sentence_vectors)
-distance_matrix = squareform(distances)
-
-percentile = 0.05
-threshold = np.percentile(distances, percentile)
-
-
-def get_distant_pairs(distance_matrix, threshold):
-    pairs = set()
-    n = distance_matrix.shape[0]
-    for i in range(n):
-        for j in range(i + 1, n):
-            if distance_matrix[i, j] < threshold:
-                pairs.add(i)
-                pairs.add(j)
-    return pairs
-
-
-distant_indexes = get_distant_pairs(distance_matrix, threshold)
-
-sentences_new = []
-sentences_new_q = []
-for i, s in enumerate(sentences_full):
-    if not i in distant_indexes:
-        sentences_new.append(s)
-        sentences_new_q.append(s["user"])
-    else:
-        print(s["user"])
-
 with open("./result/filtered.json", "w") as w:
-    w.write(json.dumps(sentences_new, ensure_ascii=False))
+    w.write(json.dumps(sentences_full, ensure_ascii=False))
 
-plot(sentences, "plot_before.png")
-plot(sentences_new_q, "plot_after.png")
+plot(sentences, "plot.png")
