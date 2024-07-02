@@ -43,3 +43,9 @@ from lora_infer import infer
 で読み込むためのファイルでs。
 ## lora.py
 [`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`microsoft/Phi-3-mini-4k-instruct`](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct)をファインチューニングします。
+
+# Special Thanks
+##  Calude 3.5 Sonnetくん
+`plot.py`を大幅に進化してくれました
+## WizardLMの著者さん
+https://arxiv.org/abs/2304.12244

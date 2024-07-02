@@ -4,10 +4,10 @@ transformers
 jinja2
 tqdm
 matplotlib
-gensim
 scikit-learn
 scipy==1.10.1
 torch
 peft
 bitsandbytes
 flash_attn
+sentence_transformers

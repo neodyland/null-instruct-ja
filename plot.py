@@ -1,9 +1,15 @@
+import os
+import numpy as np
 import matplotlib.pyplot as plt
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from sklearn.decomposition import PCA
 import json
 import glob
+from sentence_transformers import SentenceTransformer
+from sklearn.manifold import TSNE
+from tqdm import tqdm
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Load and prepare data
 sentences = []
 sentences_full = []
 
@@ -13,35 +19,39 @@ for f in glob.glob("./result/prompt_*.json"):
             sentences.append(x["user"])
             sentences_full.append(x)
 
-tagged_data = [
-    TaggedDocument(words=sentence.split(), tags=[str(i)])
-    for i, sentence in enumerate(sentences)
-]
-
-model = Doc2Vec(vector_size=100, min_count=1, epochs=50)
-model.build_vocab(tagged_data)
-model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
-
-
-def plot(sentences: list[str], save: str):
-    sentence_vectors = [model.dv[str(i)] for i in range(len(sentences))]
-
-    pca = PCA(n_components=2)
-    result = pca.fit_transform(sentence_vectors)
-
-    plt.figure(figsize=(14, 10))
-    scatter = plt.scatter(
-        result[:, 0], result[:, 1], c=range(len(sentences)), cmap="viridis"
-    )
-
-    plt.colorbar(
-        scatter,
-    )
-    plt.tight_layout()
-    plt.savefig(save)
-
-
 with open("./result/filtered.json", "w") as w:
-    w.write(json.dumps(sentences_full, ensure_ascii=False))
+    json.dump(sentences_full, w, ensure_ascii=False)
 
-plot(sentences, "plot.png")
+print("Data loaded")
+
+# Initialize the model
+model = SentenceTransformer("intfloat/multilingual-e5-large")
+model.cuda()
+model.eval()
+
+print("Model loaded")
+
+# Encode sentences in batches
+batch_size = 32
+vectors = []
+
+for i in tqdm(range(0, len(sentences), batch_size), desc="Encoding"):
+    batch = sentences[i : i + batch_size]
+    batch_vectors = model.encode(batch, show_progress_bar=False)
+    vectors.append(batch_vectors)
+
+vectors = np.vstack(vectors)
+print("Encoding completed")
+
+# Perform t-SNE
+tsne = TSNE(n_components=2, metric="cosine", n_jobs=-1, random_state=42)
+tsne_vectors = tsne.fit_transform(vectors)
+print("t-SNE completed")
+
+# Plot results
+plt.figure(figsize=(12, 10))
+plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], s=5, alpha=0.5)
+plt.title("テキストの分布")
+plt.tight_layout()
+plt.savefig("plot.png", dpi=300)
+print("Plot saved as plot.png")
