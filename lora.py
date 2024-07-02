@@ -9,6 +9,11 @@ from transformers import (
 from peft import LoraConfig, TaskType, prepare_model_for_kbit_training, get_peft_model
 from datasets import load_dataset
 import torch
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument("--resume", type=bool, default=False)
+args = parser.parse_args()
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -80,4 +85,4 @@ trainer = Trainer(
     data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False),
 )
 
-trainer.train()
+trainer.train(args.resume)

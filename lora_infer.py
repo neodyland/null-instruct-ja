@@ -1,8 +1,19 @@
 import torch
 from peft import PeftModel, PeftConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    GemmaForCausalLM,
+    TextStreamer,
+)
+from argparse import ArgumentParser
 
-PEFT_MODEL_PATH = "./model-result/checkpoint-286"
+parser = ArgumentParser()
+parser.add_argument("--steps", type=str, required=True)
+args = parser.parse_args()
+
+PEFT_MODEL_PATH = f"./model-result/checkpoint-{args.steps}"
 
 config = PeftConfig.from_pretrained(PEFT_MODEL_PATH)
 model = AutoModelForCausalLM.from_pretrained(
@@ -11,7 +22,7 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
 )
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
-model = PeftModel.from_pretrained(model, PEFT_MODEL_PATH)
+model: GemmaForCausalLM = PeftModel.from_pretrained(model, PEFT_MODEL_PATH)
 
 
 def infer(inst: str):
@@ -25,10 +36,11 @@ def infer(inst: str):
         ),
         return_tensors="pt",
     ).to(model.device)
-
+    streamer = TextStreamer(tokenizer, skip_prompt=True)
     with torch.no_grad():
-        tokens = model.generate(
+        model.generate(
             **inputs,
+            streamer=streamer,
             max_new_tokens=128,
             do_sample=True,
             temperature=0.7,
@@ -37,4 +49,3 @@ def infer(inst: str):
             repetition_penalty=5.0,
             pad_token_id=tokenizer.pad_token_id,
         )
-    return tokenizer.decode(tokens[0], skip_special_tokens=True)
