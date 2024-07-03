@@ -79,7 +79,7 @@ async def main():
     for entry in tqdm(ds):
         q = entry["input"]
         a = entry["output"]
-        aspect = entry["eval_aspct"]
+        aspect = entry["eval_aspect"]
         s, pred = await eval_one(
             q,
             a,
