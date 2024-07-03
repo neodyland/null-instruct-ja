@@ -8,7 +8,7 @@ from tqdm import tqdm
 parser = ArgumentParser()
 parser.add_argument("--host", default="http://localhost:8080")
 parser.add_argument("--steps", type=int, required=True)
-parser.add_argument("--max", type=int, default=128)
+parser.add_argument("--max", type=int, default=256)
 args = parser.parse_args()
 
 

@@ -14,16 +14,20 @@ tokenizer = None
 def load_model(steps: int):
     global model
     global tokenizer
-    PEFT_MODEL_PATH = f"./model-result/checkpoint-{steps}"
-    config = PeftConfig.from_pretrained(PEFT_MODEL_PATH)
-    tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
-    model = PeftModel.from_pretrained(
-        AutoModelForCausalLM.from_pretrained(
-            config.base_model_name_or_path,
-            device_map="auto",
-        ),
-        PEFT_MODEL_PATH,
-    )
+    if steps == -1:
+        tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-1.1-2b-it-bnb-4bit")
+        model = AutoModelForCausalLM.from_pretrained("unsloth/gemma-1.1-2b-it-bnb-4bit")
+    else:
+        PEFT_MODEL_PATH = f"./model-result/checkpoint-{steps}"
+        config = PeftConfig.from_pretrained(PEFT_MODEL_PATH)
+        tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
+        model = PeftModel.from_pretrained(
+            AutoModelForCausalLM.from_pretrained(
+                config.base_model_name_or_path,
+                device_map="auto",
+            ),
+            PEFT_MODEL_PATH,
+        )
 
 
 def infer(inst: str, max: int = 128, would_print: bool = True):
