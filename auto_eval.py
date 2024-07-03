@@ -97,7 +97,12 @@ async def main():
         )
     print(f"Score: {score / len(ds)}")
     with open(f"./result/eval_{time.time()}.json", "w") as w:
-        w.write(json.dumps(res, ensure_ascii=False))
+        w.write(
+            json.dumps(
+                {"progress": res, "score": score / len(ds), "steps": args.steps},
+                ensure_ascii=False,
+            )
+        )
 
 
 if __name__ == "__main__":
