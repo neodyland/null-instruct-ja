@@ -6,6 +6,7 @@ import glob
 from sentence_transformers import SentenceTransformer
 from sklearn.manifold import TSNE
 from tqdm import tqdm
+import re
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -13,11 +14,19 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 sentences = []
 sentences_full = []
 
+RE_TOO_MANY_ALPHABETS = re.compile(r"[a-zA-Z]{5,}")
+
+
+def filter_ok(text: str):
+    return RE_TOO_MANY_ALPHABETS.match(text) == None
+
+
 for f in glob.glob("./result/prompt_*.json"):
     with open(f, "r") as r:
         for x in json.loads(r.read()):
-            sentences.append(x["user"])
-            sentences_full.append(x)
+            if filter_ok(x["user"]) and filter_ok(x["model"]):
+                sentences.append(x["user"])
+                sentences_full.append(x)
 
 with open("./result/filtered.json", "w") as w:
     json.dump(sentences_full, w, ensure_ascii=False)

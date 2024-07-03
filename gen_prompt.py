@@ -2,20 +2,35 @@ from tqdm import tqdm
 import json
 from typing import List, Dict, Union, Optional
 from aiohttp import ClientSession
-import os
+from argparse import ArgumentParser
 
-HOST = os.environ.get("API_HOST") or "http://localhost:8080"
+parser = ArgumentParser()
+parser.add_argument("--max_count_for_evol", default=3, type=int)
+parser.add_argument("--max_count_for_null", default=300, type=int)
+parser.add_argument("--evol_steps", default=1, type=int)
+parser.add_argument("--host", default="http://localhost:8080")
+parser.add_argument(
+    "--type", default="llama.cpp", choices=["vllm", "llama.cpp", "openai"]
+)
+parser.add_argument("--vllm-model")
+args = parser.parse_args()
 
 
 async def chat(
-    prompt: List[Dict[str, str]], grammar: Optional[str] = None
+    prompt: List[Dict[str, str]], choices: Optional[List[str]] = None
 ) -> Union[str, None]:
     j = {"messages": prompt, "max_tokens": 1024}
-    if grammar:
-        j["grammar"] = grammar
+    if choices:
+        if args.type == "llama.cpp":
+            g = "|".join([f'"{x}"' for x in choices])
+            j["grammar"] = f"root ::= {g}"
+        elif args.type == "vllm":
+            j["guided_choice"] = choices
+    if args.vllm_model:
+        j["model"] = args.vllm_model
     async with ClientSession() as session:
         async with session.post(
-            f"{HOST}/v1/chat/completions",
+            f"{args.host}/v1/chat/completions",
             json=j,
         ) as resp:
             resp.raise_for_status()
@@ -24,7 +39,7 @@ async def chat(
             )
 
 
-async def gen(prompt: str, grammar: Optional[str] = None):
+async def gen(prompt: str, choices: Optional[List[str]] = None):
     res = await chat(
         [
             {
@@ -32,7 +47,7 @@ async def gen(prompt: str, grammar: Optional[str] = None):
                 "content": prompt,
             }
         ],
-        grammar,
+        choices,
     )
     if res is None:
         return None
@@ -84,7 +99,7 @@ async def evol_judge(prompt: str):
 プロンプト：{prompt}
 
 あなたの判断(はいかいいえだけを出力): """,
-        'root ::= "はい"|"いいえ"',
+        ["はい", "いいえ"],
     )
 
 
@@ -139,7 +154,7 @@ async def check(q: str, a: str):
 
 質問: {q}
 回答: {a}""",
-        'root ::= "はい"|"いいえ"',
+        ["はい", "いいえ"],
     )
 
 
@@ -194,13 +209,7 @@ async def evol_lot(
 
 async def main():
     import time
-    from argparse import ArgumentParser
 
-    parser = ArgumentParser()
-    parser.add_argument("--max_count_for_evol", default=3, type=int)
-    parser.add_argument("--max_count_for_null", default=300, type=int)
-    parser.add_argument("--evol_steps", default=1, type=int)
-    args = parser.parse_args()
     res = await evol_lot(
         max_count_for_evol=args.max_count_for_evol,
         max_count_for_null=args.max_count_for_null,

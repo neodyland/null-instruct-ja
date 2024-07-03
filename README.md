@@ -11,7 +11,7 @@ null instruct jaはある程度日本語性能が高いllmを用いて、人の�
 # 実行
 1. http://localhost:8080/completions にpostできる状態で任意の日本語が喋れるモデルを起動します。
 2. このリポジトリをクローンし、`requirements.txt`を参考に依存関係をインストールします。(RTX3000系以降のlinux意外は`pip install -r requirements.txt`ではインストールできません。適宜手動インストールしてください。)
-3. `API_HOST=http://localhost:8080 python gen_prompt.py --max_count_for_evol 3 --max_count_for_null 300 --evol_steps 1` を実行します。
+3. `python gen_prompt.py --max_count_for_evol 3 --max_count_for_null 300 --evol_steps 1 --host http://localhost:8080 --type llama.cpp` を実行します。
 4. 終わったら`python plot.py` を実行します。
 5. `result/filtered.json` に結果が出力されます。
 
@@ -23,6 +23,11 @@ null instruct jaはある程度日本語性能が高いllmを用いて、人の�
 nullで生成されたpromptに対して類似するプロンプトを生成する回数を指定します。3回を強く推奨します。
 ## evol_steps
 プロンプトの進化回数を指定します。gemma-2の場合は一回くらいで十分だと思います。
+## host
+APIが立っているホストです。openai互換であればなんでもいいです。
+## type
+llama.cpp/vllm/openaiのいずれかを選択してください。  
+llama.cppとvllmではgrammarを利用して回答の成功率を上げます。
 
 # それぞれのファイルの役割
 ## ds.py
