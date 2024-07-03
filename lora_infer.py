@@ -57,7 +57,7 @@ def infer(inst: str, max: int = 128, would_print: bool = True):
             ),
         )
         return tokenizer.decode(
-            out[0][len(inputs["input_ids"]) :], skip_special_tokens=True
+            out[0][len(inputs["input_ids"][0]) :], skip_special_tokens=True
         )
 
 

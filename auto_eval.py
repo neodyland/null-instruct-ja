@@ -73,9 +73,13 @@ async def eval_one(q: str, a: str, aspect: str, max: int):
 
 
 async def main():
+    import time
+    import json
+
     load_model(args.steps)
     ds = load_dataset("elyza/ELYZA-tasks-100", split="test")
     score = 0.0
+    res = []
     for entry in tqdm(ds):
         q = entry["input"]
         a = entry["output"]
@@ -87,8 +91,13 @@ async def main():
             args.max,
         )
         score += s
-        print(f"Score: {s}\nPred: {pred}\nQuestion: {q}\nAnswer: {a}")
+        print(f"Score: {s}\nQuestion: {q}\nAnswer: {a}\nPred: {pred}")
+        res.append(
+            {"score": int(s), "question": q, "pure_answer": a, "pred_answer": pred}
+        )
     print(f"Score: {score / len(ds)}")
+    with open(f"./result/eval_{time.time()}.json", "w") as w:
+        w.write(json.dumps(res, ensure_ascii=False))
 
 
 if __name__ == "__main__":
