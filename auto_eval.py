@@ -18,7 +18,7 @@ async def chat(prompt: List[Dict[str, str]]) -> Union[str, None]:
             f"{args.host}/v1/chat/completions",
             json={
                 "messages": prompt,
-                "max_tokens": 1024,
+                "max_tokens": 1,
                 "grammar": 'root ::= "1"|"2"|"3"|"4"|"5"',
             },
         ) as resp:
