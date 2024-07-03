@@ -69,7 +69,7 @@ async def eval_one(q: str, a: str, aspect: str, max: int):
     )
     if res is None:
         return None
-    return float(res.strip())
+    return float(res.strip()), pred
 
 
 async def main():
@@ -77,12 +77,17 @@ async def main():
     ds = load_dataset("elyza/ELYZA-tasks-100", split="test")
     score = 0.0
     for entry in tqdm(ds):
-        score += await eval_one(
-            entry["input"],
-            entry["output"],
-            entry["eval_aspect"],
+        q = entry["input"]
+        a = entry["output"]
+        aspect = entry["eval_aspct"]
+        s, pred = await eval_one(
+            q,
+            a,
+            aspect,
             args.max,
         )
+        score += s
+        print(f"Score: {s}\nPred: {pred}\nQuestion: {q}\nAnswer: {a}")
     print(f"Score: {score / len(ds)}")
 
 
