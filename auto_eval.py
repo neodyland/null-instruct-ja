@@ -83,7 +83,7 @@ async def main():
             entry["eval_aspect"],
             args.max,
         )
-    print(f"Score: {score / 100}")
+    print(f"Score: {score / len(ds)}")
 
 
 if __name__ == "__main__":
