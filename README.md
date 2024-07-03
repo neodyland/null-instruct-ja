@@ -46,6 +46,8 @@ ds.push_to_hub("<hf repo id>")
 ## lora.py
 [`neody/null-instruct-ja`](https://huggingface.co/datasets/neody/null-instruct-ja)で[`google/gemma-1.1-2b-it`](https://huggingface.co/google/gemma-1.1-2b-itt)をファインチューニングします。
 `python lora.py --resume False|True`で学習を起動します。
+## auto_eval.py
+`Elyza Tasks 100`
 
 # Special Thanks
 ##  Calude 3.5 Sonnetくん
