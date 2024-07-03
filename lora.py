@@ -73,7 +73,7 @@ def formatting_prompts_func(example):
                     {"role": "assistant", "content": example["model"][i]},
                 ],
                 tokenize=False,
-            )[: -len("<end_of_turn>\n")]
+            )
             + "<eos>"
         )
     return output_texts

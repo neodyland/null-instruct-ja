@@ -1,36 +1,38 @@
 from tqdm import tqdm
 import json
-from transformers.models.gemma.tokenization_gemma_fast import GemmaTokenizerFast
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 from aiohttp import ClientSession
 import os
 
 HOST = os.environ.get("API_HOST") or "http://localhost:8080"
 
-tok: GemmaTokenizerFast = GemmaTokenizerFast.from_pretrained("google/gemma-2-27b-it")
 
-
-async def chat(prompt: List[Dict[str, str]]) -> Union[str, None]:
-    comp = tok.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)[
-        len(tok.bos_token) :
-    ]
+async def chat(
+    prompt: List[Dict[str, str]], grammar: Optional[str] = None
+) -> Union[str, None]:
+    j = {"messages": prompt, "max_tokens": 1024}
+    if grammar:
+        j["grammar"] = grammar
     async with ClientSession() as session:
         async with session.post(
-            f"{HOST}/completions",
-            json={"prompt": comp, "max_tokens": 1024},
+            f"{HOST}/v1/chat/completions",
+            json=j,
         ) as resp:
             resp.raise_for_status()
-            return (await resp.json())["content"]
+            return (await resp.json())["choices"][0]["message"]["content"].replace(
+                "<end_of_turn>", ""
+            )
 
 
-async def gen(prompt: str):
+async def gen(prompt: str, grammar: Optional[str] = None):
     res = await chat(
         [
             {
                 "role": "user",
                 "content": prompt,
             }
-        ]
+        ],
+        grammar,
     )
     if res is None:
         return None
@@ -81,7 +83,8 @@ async def evol_judge(prompt: str):
 
 プロンプト：{prompt}
 
-あなたの判断(そう思う場合は**\"はい\"**とだけ応答。思わない場合は理由を応答してください): """
+あなたの判断(はいかいいえだけを出力): """,
+        'root ::= "はい"|"いいえ"',
     )
 
 
@@ -135,7 +138,8 @@ async def check(q: str, a: str):
 このAIはテキストしか扱えないことにも留意してください。
 
 質問: {q}
-回答: {a}"""
+回答: {a}""",
+        'root ::= "はい"|"いいえ"',
     )
 
 
@@ -144,22 +148,22 @@ async def evol(prompt: str, steps: int = 3):
     if prompt is None:
         return {"failed": "width"}
     result = await evol_judge(prompt)
-    if result != "はい" and result != "はい。" and "質が高いと言えます" not in result:
-        return {"failed": "judge", "reason": result}
+    if result != "はい":
+        return {"failed": "judge"}
     for _ in range(steps):
         prompt = await evol_depth(prompt)
         if prompt is None:
             return None
     prompt = await evol_flatten(prompt)
     result = await evol_judge(prompt)
-    if result != "はい" and result != "はい。" and "質が高いと言えます" not in result:
-        return {"failed": "judge2", "reason": result}
+    if result != "はい":
+        return {"failed": "judge2"}
     r = await response(prompt)
     if "不可能" in r:
         return {"failed": "response", "reason": r}
     c = await check(prompt, r)
-    if c != "はい" and c != "はい。":
-        return {"failed": "check", "reason": c}
+    if c != "はい":
+        return {"failed": "check"}
     return {"user": prompt, "model": r}
 
 
