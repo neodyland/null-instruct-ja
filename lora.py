@@ -74,7 +74,7 @@ def formatting_prompts_func(example):
                 ],
                 tokenize=False,
             )
-            + "<eos>"
+            + tokenizer.eos_token
         )
     return output_texts
 
