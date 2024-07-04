@@ -84,7 +84,7 @@ trainer = SFTTrainer(
     train_dataset=dataset,
     args=cfg,
     data_collator=DataCollatorForCompletionOnlyLM(
-        "<|im_start|>user\n", tokenizer=tokenizer
+        "<|im_start|>assistant\n", tokenizer=tokenizer
     ),
     formatting_func=formatting_prompts_func,
 )
