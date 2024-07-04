@@ -1,23 +1,49 @@
-from typing import List, Dict, Union
+from typing import Union
 from aiohttp import ClientSession
 from argparse import ArgumentParser
 from lora_infer import infer, load_model
 from datasets import load_dataset
 from tqdm import tqdm
+import google.generativeai as genai
+import time
 
 parser = ArgumentParser()
 parser.add_argument("--host", default="http://localhost:8080")
 parser.add_argument("--steps", type=int, required=True)
-parser.add_argument("--max", type=int, default=256)
+parser.add_argument("--max", type=int, default=512)
+parser.add_argument("--gemini-api-key", type=str)
 args = parser.parse_args()
 
+if args.gemini_api_key:
+    genai.configure(api_key=args.gemini_api_key)
+    google_model = genai.GenerativeModel("gemini-1.5-flash-latest")
+else:
+    google_model = None
 
-async def chat(prompt: List[Dict[str, str]]) -> Union[str, None]:
+
+async def chat(prompt: str) -> Union[str, None]:
+    s = 0
+    if google_model:
+        while True:
+            try:
+                t = (
+                    await google_model.generate_content_async(
+                        prompt,
+                        generation_config=genai.GenerationConfig(max_output_tokens=1),
+                    )
+                ).text
+                s = 0
+                return t
+            except:
+                s += 1
+                time.sleep(s)
+                print(f"Retry to gemini api attempt {s}")
+                continue
     async with ClientSession() as session:
         async with session.post(
             f"{args.host}/v1/chat/completions",
             json={
-                "messages": prompt,
+                "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 1,
                 "grammar": 'root ::= "1"|"2"|"3"|"4"|"5"',
             },
@@ -31,10 +57,7 @@ async def chat(prompt: List[Dict[str, str]]) -> Union[str, None]:
 async def eval_one(q: str, a: str, aspect: str, max: int):
     pred = infer(q, max, False)
     res = await chat(
-        [
-            {
-                "role": "user",
-                "content": f"""あなたは採点者です。
+        f"""あなたは採点者です。
 
 問題, 正解例, 採点基準, 回答 が与えられます。
 
@@ -63,9 +86,7 @@ async def eval_one(q: str, a: str, aspect: str, max: int):
 {aspect}
 
 # 回答
-{pred}""",
-            }
-        ]
+{pred}"""
     )
     if res is None:
         return None
@@ -73,7 +94,6 @@ async def eval_one(q: str, a: str, aspect: str, max: int):
 
 
 async def main():
-    import time
     import json
 
     load_model(args.steps)

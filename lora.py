@@ -44,7 +44,7 @@ model = FastLanguageModel.get_peft_model(
 )
 
 cfg = SFTConfig(
-    num_train_epochs=2,
+    num_train_epochs=3,
     learning_rate=5e-5,
     do_train=True,
     logging_steps=5,
