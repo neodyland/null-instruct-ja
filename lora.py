@@ -16,7 +16,7 @@ torch.backends.cudnn.benchmark = True
 max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/gemma-1.1-2b-it",
+    model_name="unsloth/Qwen2-1.5B-bnb-4bit",
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,
@@ -84,7 +84,7 @@ trainer = SFTTrainer(
     train_dataset=dataset,
     args=cfg,
     data_collator=DataCollatorForCompletionOnlyLM(
-        "<start_of_turn>model\n", tokenizer=tokenizer
+        "<|im_start|>user\n", tokenizer=tokenizer
     ),
     formatting_func=formatting_prompts_func,
 )
