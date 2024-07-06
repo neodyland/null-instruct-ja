@@ -24,6 +24,9 @@ def filter_ok(text: str):
 for f in glob.glob("./result/prompt_*.json"):
     with open(f, "r") as r:
         for x in json.loads(r.read()):
+            if "reject" in x:
+                if x["reject"] == x["model"]:
+                    continue
             if filter_ok(x["user"]) and filter_ok(x["model"]):
                 sentences.append(x["user"])
                 sentences_full.append(x)

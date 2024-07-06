@@ -175,14 +175,13 @@ async def check(q: str, a: str):
 
 async def dpo_reject(q: str, a: str):
     return await gen(
-        f"""以下の質問と回答のペアに対して、DPO(Direct Performance Optimazation)のために好ましくない回答を生成してください。
-好ましくない回答以外は返答しないでください。
+        f"""以下の質問と回答のペアに対して、DPO(Direct Performance Optimazation)のために少し短くなった回答として不足している回答を生成してください。
+少し短くなった回答として不足している回答以外は返答しないでください。
 元の回答の欠点は述べないでください。
-元の回答をの情報を劣化させることで低品質な回答が生成できます。
 
 質問: {q}
 回答: {a}
-DPOのための好ましくない情報が劣化した回答: """,
+DPOのための少し短くなった回答として不足している回答: """,
     )
 
 
@@ -217,6 +216,8 @@ async def evol(prompt: str, steps: int = 3, response_steps: int = 3, dpo: bool =
     r = await response(prompt)
     if "不可能" in r:
         return {"failed": "response", "reason": r}
+    if len(r) < 10:
+        return {"failed": "length"}
     for _ in range(response_steps):
         r = await response_evol(prompt, r)
     c = await check(prompt, r)
