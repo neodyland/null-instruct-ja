@@ -1,9 +1,13 @@
 from argparse import ArgumentParser
+import os
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+from unsloth import FastLanguageModel, is_bfloat16_supported, PatchDPOTrainer
+
+PatchDPOTrainer()
 from datasets import load_dataset
-from transformers import TrainingArguments
 import torch
-from trl import DPOTrainer
-from unsloth import FastLanguageModel, is_bfloat16_supported
+from trl import DPOTrainer, DPOConfig
 
 
 parser = ArgumentParser()
@@ -17,7 +21,7 @@ torch.backends.cudnn.benchmark = True
 max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/gemma-2-9b-it-bnb-4bit",
+    model_name="unsloth/gemma-1.1-2b-it-bnb-4bit",
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,
@@ -45,7 +49,7 @@ model = FastLanguageModel.get_peft_model(
     loftq_config=None,
 )
 
-cfg = TrainingArguments(
+cfg = DPOConfig(
     num_train_epochs=3,
     learning_rate=5e-5,
     do_train=True,
@@ -59,26 +63,32 @@ cfg = TrainingArguments(
     optim="adamw_8bit",
     fp16=not is_bfloat16_supported(),
     bf16=is_bfloat16_supported(),
+    max_prompt_length=max_seq_length,
+    max_length=max_seq_length,
+    loss_type="sppo_hard",
+    remove_unused_columns=False,
 )
 
 dataset = load_dataset("neody/null-instruct-ja", split="train")
 
 
 def func(example):
-    output_texts = []
+    prompts = []
+    chosens = []
+    rejecteds = []
     for i, user in enumerate(example["user"]):
-        output_texts.append(
-            {
-                "prompt": user,
-                "choosen": example["model"][i],
-                "rejected": example["reject"][i],
-            }
-        )
-    return output_texts
+        prompts.append(user)
+        chosens.append(example["model"][i]),
+        rejecteds.append(example["reject"][i]),
+    return {
+        "prompt": prompts,
+        "chosen": chosens,
+        "rejected": rejecteds,
+    }
 
 
 dataset = dataset.map(func, batched=True, remove_columns=list(dataset.features))
 
-trainer = DPOTrainer(model=model, train_dataset=dataset, args=cfg, loss_type="ipo")
+trainer = DPOTrainer(model=model, train_dataset=dataset, args=cfg, tokenizer=tokenizer)
 
 trainer.train(args.resume)
