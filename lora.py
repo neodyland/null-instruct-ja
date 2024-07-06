@@ -18,7 +18,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 
-max_seq_length = 8192
+max_seq_length = 4096
 
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/gemma-1.1-2b-it-bnb-4bit",
