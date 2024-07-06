@@ -8,6 +8,7 @@ parser = ArgumentParser()
 parser.add_argument("--max_count_for_evol", default=3, type=int)
 parser.add_argument("--max_count_for_null", default=300, type=int)
 parser.add_argument("--evol_steps", default=1, type=int)
+parser.add_argument("--response_steps", default=2, type=int)
 parser.add_argument("--dpo", action="store_true")
 parser.add_argument("--host", default="http://localhost:8080")
 parser.add_argument(
@@ -135,7 +136,7 @@ async def evol_flatten(prompt: str):
 
 async def response(prompt: str):
     return await gen(
-        f"""あなたはとても賢い饒舌なAIとして、以下の質問に対して回答します。
+        f"""あなたはとても賢く饒舌なAIとして、以下の質問に対して回答します。
 しかしながら、質問の質はよいとは限らず、回答が不可能なものも含まれます。
 回答が可能である場合は質問に対して回答し、回答が不可能、または正確な回答を導き出すことが不可能である場合は、\"不可能\"とだけ回答してください。
 回答が可能である場合は回答のみを出力してください。
@@ -143,6 +144,19 @@ async def response(prompt: str):
 質問: {prompt}
 
 回答もしくは\"不可能\": """
+    )
+
+
+async def response_evol(prompt: str, a: str):
+    return await gen(
+        f"""あなたはとても賢く饒舌なAIです。
+以下の質問と回答のペアからより良い回答を導き出し、より良い回答のみを返答してください。
+改善点などは決して出力しないでください。
+
+質問: {prompt}
+答え: {a}
+
+より良い回答もしくは: """
     )
 
 
@@ -163,16 +177,20 @@ async def dpo_reject(q: str, a: str):
     return await gen(
         f"""以下の質問と回答のペアに対して、DPO(Direct Performance Optimazation)のために好ましくない回答を生成してください。
 好ましくない回答以外は返答しないでください。
+元の回答の欠点は述べないでください。
+元の回答をの情報を劣化させることで低品質な回答が生成できます。
 
 質問: {q}
 回答: {a}
-DPOで好ましくない回答: """,
+DPOのための好ましくない情報が劣化した回答: """,
     )
 
 
 async def dpo_reject_check(q: str, a: str, r: str):
     return await gen(
         f"""以下の質問と回答のペアに対して、RejectがDPO(Direct Performance Optimazation)における好ましくない内容として相応しいかどうか、また質問に対して回答が好ましいかどうかをはいかいいえで返答してください。
+そもそも回答になっていない場合はいいえと返答してください。
+回答に余計なもの(改善点など)が含まれている場合はいいえと返答してください。
 
 質問: {q}
 回答: {a}
@@ -181,7 +199,7 @@ DPOで好ましくない回答: {r}""",
     )
 
 
-async def evol(prompt: str, steps: int = 3, dpo: bool = False):
+async def evol(prompt: str, steps: int = 3, response_steps: int = 3, dpo: bool = False):
     prompt = await evol_width(prompt)
     if prompt is None:
         return {"failed": "width"}
@@ -199,6 +217,8 @@ async def evol(prompt: str, steps: int = 3, dpo: bool = False):
     r = await response(prompt)
     if "不可能" in r:
         return {"failed": "response", "reason": r}
+    for _ in range(response_steps):
+        r = await response_evol(prompt, r)
     c = await check(prompt, r)
     if c != "はい":
         return {"failed": "check"}
@@ -215,6 +235,7 @@ async def evol_lot(
     max_count_for_evol: int = 1,
     max_count_for_null: int = 1,
     evol_steps: int = 3,
+    response_steps: int = 3,
     dpo: bool = False,
 ) -> List[str]:
     res = []
@@ -225,7 +246,7 @@ async def evol_lot(
                 pbar.update(max_count_for_evol)
                 continue
             for _ in range(max_count_for_evol):
-                r = await evol(prompt, evol_steps, dpo)
+                r = await evol(prompt, evol_steps, response_steps, dpo)
                 if "user" in r:
                     m = r["model"]
                     u = r["user"]
@@ -250,6 +271,7 @@ async def main():
         max_count_for_evol=args.max_count_for_evol,
         max_count_for_null=args.max_count_for_null,
         evol_steps=args.evol_steps,
+        response_steps=args.response_steps,
         dpo=args.dpo,
     )
     with open(f"./result/prompt_{time.time()}.json", "w") as w:
