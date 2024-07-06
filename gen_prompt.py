@@ -8,6 +8,7 @@ parser = ArgumentParser()
 parser.add_argument("--max_count_for_evol", default=3, type=int)
 parser.add_argument("--max_count_for_null", default=300, type=int)
 parser.add_argument("--evol_steps", default=1, type=int)
+parser.add_argument("--dpo", action="store_true")
 parser.add_argument("--host", default="http://localhost:8080")
 parser.add_argument(
     "--type", default="llama.cpp", choices=["vllm", "llama.cpp", "openai"]
@@ -158,7 +159,29 @@ async def check(q: str, a: str):
     )
 
 
-async def evol(prompt: str, steps: int = 3):
+async def dpo_reject(q: str, a: str):
+    return await gen(
+        f"""以下の質問と回答のペアに対して、DPO(Direct Performance Optimazation)のために好ましくない回答を生成してください。
+好ましくない回答以外は返答しないでください。
+
+質問: {q}
+回答: {a}
+DPOで好ましくない回答: """,
+    )
+
+
+async def dpo_reject_check(q: str, a: str, r: str):
+    return await gen(
+        f"""以下の質問と回答のペアに対して、RejectがDPO(Direct Performance Optimazation)における好ましくない内容として相応しいかどうか、また質問に対して回答が好ましいかどうかをはいかいいえで返答してください。
+
+質問: {q}
+回答: {a}
+DPOで好ましくない回答: {r}""",
+        ["はい", "いいえ"],
+    )
+
+
+async def evol(prompt: str, steps: int = 3, dpo: bool = False):
     prompt = await evol_width(prompt)
     if prompt is None:
         return {"failed": "width"}
@@ -179,11 +202,20 @@ async def evol(prompt: str, steps: int = 3):
     c = await check(prompt, r)
     if c != "はい":
         return {"failed": "check"}
-    return {"user": prompt, "model": r}
+    if not dpo:
+        return {"user": prompt, "model": r}
+    d = await dpo_reject(prompt, r)
+    c = await dpo_reject_check(prompt, r, d)
+    if c != "はい":
+        return {"failed": "dpo_check"}
+    return {"user": prompt, "model": r, "reject": d}
 
 
 async def evol_lot(
-    max_count_for_evol: int = 1, max_count_for_null: int = 1, evol_steps: int = 3
+    max_count_for_evol: int = 1,
+    max_count_for_null: int = 1,
+    evol_steps: int = 3,
+    dpo: bool = False,
 ) -> List[str]:
     res = []
     with tqdm(total=max_count_for_evol * max_count_for_null) as pbar:
@@ -193,11 +225,15 @@ async def evol_lot(
                 pbar.update(max_count_for_evol)
                 continue
             for _ in range(max_count_for_evol):
-                r = await evol(prompt, evol_steps)
+                r = await evol(prompt, evol_steps, dpo)
                 if "user" in r:
                     m = r["model"]
                     u = r["user"]
-                    print(f"Question: {u}\nAnswer: {m}")
+                    if "reject" in r:
+                        rj = r["reject"]
+                        print(f"Question: {u}\nAnswer: {m}\nReject: {rj}")
+                    else:
+                        print(f"Question: {u}\nAnswer: {m}")
                     res.append(r)
                 else:
                     f = r["failed"]
@@ -214,6 +250,7 @@ async def main():
         max_count_for_evol=args.max_count_for_evol,
         max_count_for_null=args.max_count_for_null,
         evol_steps=args.evol_steps,
+        dpo=args.dpo,
     )
     with open(f"./result/prompt_{time.time()}.json", "w") as w:
         w.write(json.dumps(res, ensure_ascii=False))
