@@ -14,7 +14,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 sentences = []
 sentences_full = []
 
-IS_NOT_JP = regex.compile(r"[A-Za-z\uAC00-\uD7A3]")
+IS_NOT_JP = regex.compile(r"[A-Za-z\uAC00-\uD7A3\u0621-\u064A]")
 
 
 def filter_ok(text: str):
