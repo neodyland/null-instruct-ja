@@ -3,6 +3,9 @@ import os
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from unsloth import FastLanguageModel, is_bfloat16_supported, PatchDPOTrainer
+from torch import nn
+from typing import Dict, Union, Any
+import gc
 
 PatchDPOTrainer()
 from datasets import load_dataset
@@ -18,7 +21,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 
-max_seq_length = 4096
+max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/gemma-1.1-2b-it-bnb-4bit",
@@ -65,7 +68,7 @@ cfg = DPOConfig(
     bf16=is_bfloat16_supported(),
     max_prompt_length=max_seq_length,
     max_length=max_seq_length,
-    loss_type="sppo_hard",
+    loss_type="ipo",
     remove_unused_columns=False,
 )
 
@@ -89,6 +92,17 @@ def func(example):
 
 dataset = dataset.map(func, batched=True, remove_columns=list(dataset.features))
 
-trainer = DPOTrainer(model=model, train_dataset=dataset, args=cfg, tokenizer=tokenizer)
+
+class Trainer(DPOTrainer):
+    def training_step(
+        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]
+    ) -> torch.Tensor:
+        loss_step = super().training_step(model, inputs)
+        torch.cuda.empty_cache()
+        gc.collect()
+        return loss_step
+
+
+trainer = Trainer(model=model, train_dataset=dataset, args=cfg, tokenizer=tokenizer)
 
 trainer.train(args.resume)
