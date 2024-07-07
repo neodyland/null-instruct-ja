@@ -24,7 +24,7 @@ torch.backends.cudnn.benchmark = True
 max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/gemma-1.1-2b-it-bnb-4bit",
+    model_name="unsloth/mistral-7b-v0.3-bnb-4bit",
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,
@@ -66,6 +66,9 @@ cfg = ORPOConfig(
     optim="adamw_8bit",
     fp16=not is_bfloat16_supported(),
     bf16=is_bfloat16_supported(),
+    remove_unused_columns=False,
+    max_length=max_seq_length,
+    max_prompt_length=max_seq_length,
 )
 
 dataset = load_dataset("neody/null-instruct-ja", split="train")
