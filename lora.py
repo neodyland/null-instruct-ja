@@ -15,6 +15,7 @@ from trl import ORPOConfig, ORPOTrainer
 
 parser = ArgumentParser()
 parser.add_argument("--resume", type=bool, default=False)
+parser.add_argument("--batch_size", type=int, default=1)
 args = parser.parse_args()
 
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -53,7 +54,7 @@ model = FastLanguageModel.get_peft_model(
 )
 
 cfg = ORPOConfig(
-    num_train_epochs=3,
+    num_train_epochs=2,
     learning_rate=5e-5,
     do_train=True,
     logging_steps=5,
@@ -62,7 +63,7 @@ cfg = ORPOConfig(
     output_dir="model-result",
     save_total_limit=2,
     push_to_hub=False,
-    auto_find_batch_size=True,
+    per_gpu_train_batch_size=args.batch_size,
     optim="adamw_8bit",
     fp16=not is_bfloat16_supported(),
     bf16=is_bfloat16_supported(),
