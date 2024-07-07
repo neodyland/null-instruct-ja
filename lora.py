@@ -24,7 +24,7 @@ torch.backends.cudnn.benchmark = True
 max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/llama-3-8b-Instruct-bnb-4bit",
+    model_name="unsloth/mistral-7b-instruct-v0.3-bnb-4bit",
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,

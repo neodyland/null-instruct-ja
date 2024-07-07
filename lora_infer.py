@@ -11,10 +11,10 @@ from transformers import (
 def load_model(steps: int):
     if steps == -1:
         tokenizer = AutoTokenizer.from_pretrained(
-            "unsloth/llama-3-8b-Instruct-bnb-4bit"
+            "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"
         )
         model = AutoModelForCausalLM.from_pretrained(
-            "unsloth/llama-3-8b-Instruct-bnb-4bit"
+            "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"
         )
     else:
         PEFT_MODEL_PATH = f"./model-result/checkpoint-{steps}"
