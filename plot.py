@@ -6,7 +6,7 @@ import glob
 from sentence_transformers import SentenceTransformer
 from sklearn.manifold import TSNE
 from tqdm import tqdm
-import re
+import regex
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -14,11 +14,11 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 sentences = []
 sentences_full = []
 
-RE_INCLUDE_ALPHABETS = re.compile(r"[a-zA-Z]")
+IS_NOT_JP = regex.compile(r"[A-Za-z\uAC00-\uD7A3]+")
 
 
 def filter_ok(text: str):
-    return RE_INCLUDE_ALPHABETS.match(text) == None
+    return IS_NOT_JP.match(text) == None
 
 
 for f in glob.glob("./result/prompt_*.json"):
@@ -30,6 +30,8 @@ for f in glob.glob("./result/prompt_*.json"):
             if filter_ok(x["user"]) and filter_ok(x["model"]):
                 sentences.append(x["user"])
                 sentences_full.append(x)
+            else:
+                print(f"Skip: {x}")
 
 with open("./result/filtered.json", "w") as w:
     json.dump(sentences_full, w, ensure_ascii=False)
