@@ -10,8 +10,8 @@ from transformers import (
 
 def load_model(steps: int):
     if steps == -1:
-        tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-1.1-7b-it")
-        model = AutoModelForCausalLM.from_pretrained("unsloth/gemma-1.1-7b-it")
+        tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-1.1-7b-it-bnb-4bit")
+        model = AutoModelForCausalLM.from_pretrained("unsloth/gemma-1.1-7b-it-bnb-4bit")
     else:
         PEFT_MODEL_PATH = f"./model-result/checkpoint-{steps}"
         config = PeftConfig.from_pretrained(PEFT_MODEL_PATH)

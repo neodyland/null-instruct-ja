@@ -24,7 +24,7 @@ torch.backends.cudnn.benchmark = True
 max_seq_length = 8192
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/gemma-1.1-7b-it",
+    model_name="unsloth/gemma-1.1-7b-it-bnb-4bit",
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,
