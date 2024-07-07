@@ -14,11 +14,11 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 sentences = []
 sentences_full = []
 
-RE_TOO_MANY_ALPHABETS = re.compile(r"[a-zA-Z]{5,}")
+RE_INCLUDE_ALPHABETS = re.compile(r"[a-zA-Z]")
 
 
 def filter_ok(text: str):
-    return RE_TOO_MANY_ALPHABETS.match(text) == None
+    return RE_INCLUDE_ALPHABETS.match(text) == None
 
 
 for f in glob.glob("./result/prompt_*.json"):

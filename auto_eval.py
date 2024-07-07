@@ -54,8 +54,8 @@ async def chat(prompt: str) -> Union[str, None]:
             )
 
 
-async def eval_one(q: str, a: str, aspect: str, max: int):
-    pred = infer(q, max, False)
+async def eval_one(tok_and_mod, q: str, a: str, aspect: str, max: int):
+    pred = infer(tok_and_mod, q, max, False)
     res = await chat(
         f"""あなたは採点者です。
 
@@ -96,7 +96,7 @@ async def eval_one(q: str, a: str, aspect: str, max: int):
 async def main():
     import json
 
-    load_model(args.steps)
+    tok_and_mod = load_model(args.steps)
     ds = load_dataset("elyza/ELYZA-tasks-100", split="test")
     score = 0.0
     res = []
@@ -105,6 +105,7 @@ async def main():
         a = entry["output"]
         aspect = entry["eval_aspect"]
         s, pred = await eval_one(
+            tok_and_mod,
             q,
             a,
             aspect,

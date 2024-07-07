@@ -7,13 +7,8 @@ from transformers import (
     GenerationConfig,
 )
 
-model = None
-tokenizer = None
-
 
 def load_model(steps: int):
-    global model
-    global tokenizer
     if steps == -1:
         tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-1.1-2b-it-bnb-4bit")
         model = AutoModelForCausalLM.from_pretrained("unsloth/gemma-1.1-2b-it-bnb-4bit")
@@ -28,9 +23,11 @@ def load_model(steps: int):
             ),
             PEFT_MODEL_PATH,
         )
+    return (tokenizer, model)
 
 
-def infer(inst: str, max: int = 128, would_print: bool = True):
+def infer(mod_and_tok, inst: str, max: int = 128, would_print: bool = True):
+    tokenizer, model = mod_and_tok
     inputs = tokenizer(
         tokenizer.apply_chat_template(
             [
@@ -68,10 +65,10 @@ if __name__ == "__main__":
     parser.add_argument("--steps", type=int, required=True)
     parser.add_argument("--max", type=int, default=128)
     args = parser.parse_args()
-    load_model(args.steps)
+    tok_and_mod = load_model(args.steps)
     while True:
         inp = input("User: ")
         if inp == "exit":
             break
         print("Model: ", end="")
-        infer(inp, args.max)
+        infer(tok_and_mod, inp, args.max)
