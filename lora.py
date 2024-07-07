@@ -10,7 +10,7 @@ import gc
 PatchDPOTrainer()
 from datasets import load_dataset
 import torch
-from trl import DPOTrainer, DPOConfig
+from trl import ORPOConfig, ORPOTrainer
 
 
 parser = ArgumentParser()
@@ -52,7 +52,7 @@ model = FastLanguageModel.get_peft_model(
     loftq_config=None,
 )
 
-cfg = DPOConfig(
+cfg = ORPOConfig(
     num_train_epochs=3,
     learning_rate=5e-5,
     do_train=True,
@@ -66,10 +66,6 @@ cfg = DPOConfig(
     optim="adamw_8bit",
     fp16=not is_bfloat16_supported(),
     bf16=is_bfloat16_supported(),
-    max_prompt_length=max_seq_length,
-    max_length=max_seq_length,
-    loss_type="ipo",
-    remove_unused_columns=False,
 )
 
 dataset = load_dataset("neody/null-instruct-ja", split="train")
@@ -93,7 +89,7 @@ def func(example):
 dataset = dataset.map(func, batched=True, remove_columns=list(dataset.features))
 
 
-class Trainer(DPOTrainer):
+class Trainer(ORPOTrainer):
     def training_step(
         self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]
     ) -> torch.Tensor:
