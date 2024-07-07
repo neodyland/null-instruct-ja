@@ -18,7 +18,7 @@ IS_NOT_JP = regex.compile(r"[A-Za-z\uAC00-\uD7A3]")
 
 
 def filter_ok(text: str):
-    return IS_NOT_JP.match(text) == None
+    return len(IS_NOT_JP.findall(text)) == 0
 
 
 for f in glob.glob("./result/prompt_*.json"):
