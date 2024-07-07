@@ -14,3 +14,4 @@ sentence_transformers
 trl
 "unsloth[cu121-ampere-torch230] @ git+https://github.com/unslothai/unsloth.git"
 google-generativeai
+gradio
